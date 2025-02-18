@@ -1,0 +1,10 @@
+linux:
+adb shell dumpsys window | grep "mHasSurface"
+adb shell dumpsys window | grep -E 'mCurrentFocus'
+adb shell dumpsys package | grep -i "com.automattic.simplenote" | grep Activity
+
+find the correct activity of an app:
+adb shell cmd package resolve-activity --brief com.google.android.youtube
+
+
+windows:
