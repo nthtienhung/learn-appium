@@ -6,6 +6,7 @@ import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.touch.WaitOptions;
 import io.appium.java_client.touch.offset.PointOption;
 import org.openqa.selenium.By;
+import org.openqa.selenium.ElementNotInteractableException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -33,11 +34,9 @@ public class FacebookTest1 {
         capabilities.setCapability("udid", "4ca23feb"); // Automation framework
 
         capabilities.setCapability("noReset", true); // Preserve app state
-        capabilities.setCapability("fullReset", false);
-        capabilities.setCapability("autoGrantPermissions", true); // Auto-grant permissions
-        capabilities.setCapability("dontStopAppOnReset", true); // Keep app running
-        
-        // ...existing code...
+        // capabilities.setCapability("fullReset", false);
+        // capabilities.setCapability("autoGrantPermissions", true); // Auto-grant permissions
+        // capabilities.setCapability("dontStopAppOnReset", true); // Keep app running
         
         try {
                     // Define Appium Server URL
@@ -46,32 +45,58 @@ public class FacebookTest1 {
             WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
             System.out.println("Opening Facebook");
 
-            // // Wait for app to load and stabilize
-            // wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//android.widget.Button[@content-desc=\"Save\"]")));
-            
-            // // Click save login if present
-            // try {
-            //     WebElement saveButton = driver.findElement(By.xpath("//android.widget.Button[@content-desc=\"Save\"]"));
-            //     if (saveButton.isDisplayed()) {
-            //         saveButton.click();
-            //         System.out.println("Clicked save login button");
-            //     }
-            // } catch (Exception e) {
-            //     System.out.println("Save login button not found or not needed");
-            // }
-
-            Thread.sleep(5000);
-
-            // Scroll with proper error handling
             int scrollCount = 0;
-            while (scrollCount < 10) {
+            WebDriverWait shortWait = new WebDriverWait(driver, Duration.ofSeconds(2));
+            while (true) {
                 try {
                     driver.findElement(MobileBy.AndroidUIAutomator(
                             "new UiScrollable(new UiSelector().scrollable(true)).scrollToEnd(1);"
                     ));
                     System.out.println("Scrolled " + scrollCount + " times");
-                    // Add small delay between scrolls
-                    Thread.sleep(1000);
+
+                    //press like
+                    WebElement likeButton = driver.findElement(MobileBy.AndroidUIAutomator(
+                        "new UiSelector().description(\"Like. Double tap and hold to react.\")"));
+                    likeButton.click();
+
+                    //click comment button
+                    WebElement commentButton = driver.findElement(MobileBy.AndroidUIAutomator(
+                        "new UiSelector().description(\"Comment\")"));
+                    commentButton.click();
+
+                    WebElement commentInput;
+
+                    // Find and click the comment input field
+                    //there are 2 type of selectors for inputting commment
+                    //1 for empty post
+                    //1 for post with existing comments
+                    try{
+                        commentInput = shortWait.until(ExpectedConditions.presenceOfElementLocated(
+                            MobileBy.AndroidUIAutomator("new UiSelector().text(\"Write a comment…\")")
+                        ));
+                    } catch (Exception e) {
+                        commentInput = shortWait.until(ExpectedConditions.presenceOfElementLocated(
+                            MobileBy.AndroidUIAutomator("new UiSelector().text(\"Write a public comment…\")")
+                        ));
+                    }
+
+                    commentInput.click();
+
+                    // Clear existing text and type new comment
+                    commentInput.clear();
+                    commentInput.sendKeys("Your comment text here");
+
+                    // click send comment, using AccessibilityId directly
+                    WebElement sendButton = shortWait.until(ExpectedConditions.presenceOfElementLocated(
+                        MobileBy.AccessibilityId("Send")
+                    ));
+                    sendButton.click();
+
+                    //go back
+                    driver.navigate().back();
+                    driver.navigate().back();
+
+
                     scrollCount++;
                 } catch (Exception e) {
                     System.out.println("Scroll failed: " + e.getMessage());
