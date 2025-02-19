@@ -19,7 +19,7 @@ import java.time.Duration;
 
 import static java.time.Duration.ofSeconds;
 
-public class FacebookTest1 {
+public class Fb_Like_Comment {
     public static void main(String[] args) throws MalformedURLException {
         DesiredCapabilities capabilities = new DesiredCapabilities();
         
@@ -84,7 +84,7 @@ public class FacebookTest1 {
 
                     // Clear existing text and type new comment
                     commentInput.clear();
-                    commentInput.sendKeys("Your comment text here");
+                    commentInput.sendKeys("you do they they did you die.");
 
                     // click send comment, using AccessibilityId directly
                     WebElement sendButton = shortWait.until(ExpectedConditions.presenceOfElementLocated(
