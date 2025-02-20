@@ -34,12 +34,10 @@ public class Fb_Like_Comment {
         capabilities.setCapability("udid", "4ca23feb"); // Automation framework
 
         capabilities.setCapability("noReset", true); // Preserve app state
-        // capabilities.setCapability("fullReset", false);
-        // capabilities.setCapability("autoGrantPermissions", true); // Auto-grant permissions
-        // capabilities.setCapability("dontStopAppOnReset", true); // Keep app running
-        
+        capabilities.setCapability("printPageSourceOnFindFailure", true); // Enforces the server to dump the actual XML page source into the log if any error happens
+
         try {
-                    // Define Appium Server URL
+            // Define Appium Server URL
             URL url = URI.create("http://127.0.0.1:4723/wd/hub").toURL();
             AndroidDriver driver = new AndroidDriver(url, capabilities);
             WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
@@ -50,7 +48,8 @@ public class Fb_Like_Comment {
             while (true) {
                 try {
                     driver.findElement(MobileBy.AndroidUIAutomator(
-                            "new UiScrollable(new UiSelector().scrollable(true)).scrollToEnd(1);"
+                            // "new UiScrollable(new UiSelector().scrollable(true)).scrollToEnd(1);"
+                            "new UiScrollable(new UiSelector().scrollable(true)).scrollForward();"
                     ));
                     System.out.println("Scrolled " + scrollCount + " times");
 
@@ -67,7 +66,7 @@ public class Fb_Like_Comment {
                     WebElement commentInput;
 
                     // Find and click the comment input field
-                    //there are 2 type of selectors for inputting commment
+                    //there are 2 type of selectors for inputing commment
                     //1 for empty post
                     //1 for post with existing comments
                     try{

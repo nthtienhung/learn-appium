@@ -1,74 +1,116 @@
 package Demo;
 
+import com.google.common.collect.ImmutableMap;
 import io.appium.java_client.AppiumBy;
-import io.appium.java_client.MobileBy;
-import io.appium.java_client.TouchAction;
 import io.appium.java_client.android.AndroidDriver;
-import io.appium.java_client.touch.WaitOptions;
-import io.appium.java_client.android.AndroidTouchAction;
-import io.appium.java_client.touch.offset.PointOption;
-import org.openqa.selenium.By;
+import io.appium.java_client.service.local.AppiumServiceBuilder;
+import io.appium.java_client.service.local.AppiumDriverLocalService;
+import io.appium.java_client.service.local.flags.GeneralServerFlag;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.ElementNotInteractableException;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.remote.DesiredCapabilities;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-
 import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
 import java.time.Duration;
 import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static java.time.Duration.ofSeconds;
 
 public class Fb_Add_Friends {
-    public static void main(String[] args) throws MalformedURLException {
-        DesiredCapabilities capabilities = new DesiredCapabilities();
-        
-        // ...existing code...
-        
-        capabilities.setCapability("platformName", "Android"); // Platform name (case-sensitive)
-        capabilities.setCapability("platformVersion", "14");  // Android version
-        capabilities.setCapability("deviceName", "M2101K7AG"); // Emulator/device name
-        capabilities.setCapability("automationName", "uiautomator2"); // Automation framework
-        capabilities.setCapability("appPackage", "com.facebook.katana"); // Automation framework
-        capabilities.setCapability("appActivity", "com.facebook.katana.activity.FbMainTabActivity"); // Automation framework
-        capabilities.setCapability("udid", "4ca23feb"); // Automation framework
+    private static AppiumDriverLocalService service;
 
-        capabilities.setCapability("noReset", true); // Preserve app state
-        // capabilities.setCapability("fullReset", false);
-        // capabilities.setCapability("autoGrantPermissions", true); // Auto-grant permissions
-        // capabilities.setCapability("dontStopAppOnReset", true); // Keep app running
-        
+    private static void startAppiumServer() {
         try {
-            URL url = URI.create("http://127.0.0.1:4723/wd/hub").toURL();
-            AndroidDriver driver = new AndroidDriver(url, capabilities);
-            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
+            // Create logs directory if it doesn't exist
+            java.io.File logDir = new java.io.File("logs");
+            if (!logDir.exists()) {
+                logDir.mkdir();
+            }
+
+            // Set NodeJS and Appium main.js path
+            String nodeJSPath = "C:\\Program Files\\nodejs\\node.exe";  // Adjust this path
+            String appiumJSPath = "C:\\Users\\hungnt2\\AppData\\Roaming\\npm\\node_modules\\appium\\build\\lib\\main.js"; // Adjust this path
+
+            AppiumServiceBuilder builder = new AppiumServiceBuilder()
+                .withIPAddress("127.0.0.1")
+                .usingPort(4723)
+                .withLogFile(new java.io.File("logs/appium.log"))
+                .withArgument(GeneralServerFlag.SESSION_OVERRIDE)
+                .withArgument(GeneralServerFlag.LOG_LEVEL, "info");
+
+            // If you need to specify Node.js and Appium paths explicitly
+            if (new java.io.File(nodeJSPath).exists()) {
+                builder.usingDriverExecutable(new java.io.File(nodeJSPath));
+            }
+            if (new java.io.File(appiumJSPath).exists()) {
+                builder.withAppiumJS(new java.io.File(appiumJSPath));
+            }
+
+            service = AppiumDriverLocalService.buildService(builder);
+            
+            if (service == null) {
+                throw new RuntimeException("Appium service could not be created");
+            }
+
+            service.start();
+
+            if (service.isRunning()) {
+                System.out.println("Appium server started successfully on port 4723");
+            } else {
+                throw new RuntimeException("Appium server not running");
+            }
+        } catch (Exception e) {
+            System.err.println("Error starting Appium server: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static void stopAppiumServer() {
+        if (service != null) {
+            service.stop();
+            System.out.println("Appium server stopped");
+        }
+    }
+
+    public static void main(String[] args) throws MalformedURLException {
+        try {
+            startAppiumServer();
+            
+            DesiredCapabilities capabilities = new DesiredCapabilities();
+            
+            capabilities.setCapability("platformName", "Android"); 
+            capabilities.setCapability("platformVersion", "14"); 
+            capabilities.setCapability("deviceName", "M2101K7AG"); 
+            capabilities.setCapability("automationName", "uiautomator2"); 
+            capabilities.setCapability("appPackage", "com.facebook.katana"); 
+            capabilities.setCapability("appActivity", "com.facebook.katana.activity.FbMainTabActivity"); 
+            capabilities.setCapability("udid", "4ca23feb"); 
+            capabilities.setCapability("noReset", true); 
+            
+            // Modified URL to use service URL
+            AndroidDriver driver = new AndroidDriver(service.getUrl(), capabilities);
             System.out.println("Opening Facebook");
 
             //click friends button (too hard cannot do) 
-            //alternative approach: swipe right
+            //alternative approach: swipe left
             // Get screen dimensions
             Dimension size = driver.manage().window().getSize();
             int screenWidth = size.getWidth();
             int screenHeight = size.getHeight();
-
             // Calculate swipe coordinates
-            int startX = (int) (screenWidth * 0.9); // 10% from left
-            int endX = (int) (screenWidth * 0.1);   // 90% from left
-            int centerY = (int) (screenHeight * 0.8);         // Middle of screen
+            int startX = (int) (screenWidth * 0.9); // 90% from left
+            int endX = (int) (screenWidth * 0.1);   // 10% from left
+            int centerY = (int) (screenHeight * 0.8); // 80% from top
 
-            // Create TouchAction and perform swipe
-            new TouchAction(driver)
-                .press(PointOption.point(startX, centerY))
-                .waitAction(WaitOptions.waitOptions(Duration.ofMillis(300)))
-                .moveTo(PointOption.point(endX, centerY))
-                .release()
-                .perform();
+            // Swipe using W3C Actions directly
+            Map<String, Object> swipeObject = new HashMap<>();
+            swipeObject.put("direction", "left");
+            swipeObject.put("percent", 0.75);
+            driver.executeScript("mobile: swipe", swipeObject);
 
             // Add wait after swipe
             Thread.sleep(1000);
@@ -81,9 +123,10 @@ public class Fb_Add_Friends {
                 try {
                     // Find all "Add Friend" buttons on current screen
                     String uiAutomatorString = "new UiSelector().descriptionContains(\"Add\").descriptionContains(\"as a friend\")";
-                    java.util.List<WebElement> addButtons = driver.findElements(MobileBy.AndroidUIAutomator(uiAutomatorString));
+                    List<WebElement> addButtons = driver.findElements(AppiumBy.androidUIAutomator(uiAutomatorString));
                     
                     // Click each "Add Friend" button found
+                    //problem: it tried to click the previous add friend button, instead of clicking the next one
                     for (WebElement button : addButtons) {
                         try {
                             button.click();
@@ -95,8 +138,8 @@ public class Fb_Add_Friends {
                         }
                     }
 
-                    // Scroll down
-                    boolean scrolled = driver.findElement(MobileBy.AndroidUIAutomator(
+                    // Scroll down using UiAutomator2
+                    boolean scrolled = driver.findElement(AppiumBy.androidUIAutomator(
                             "new UiScrollable(new UiSelector().scrollable(true)).scrollToEnd(1)"
                     )) != null;
 
@@ -119,6 +162,8 @@ public class Fb_Add_Friends {
         } catch (Exception e) {
             System.err.println("Test failed: " + e.getMessage());
             e.printStackTrace();
+        } finally {
+            stopAppiumServer();
         }
     }
 }
