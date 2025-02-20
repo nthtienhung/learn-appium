@@ -1,5 +1,6 @@
 package Demo;
 
+import io.appium.java_client.AppiumBy;
 import io.appium.java_client.MobileBy;
 import io.appium.java_client.TouchAction;
 import io.appium.java_client.android.AndroidDriver;
@@ -7,6 +8,7 @@ import io.appium.java_client.touch.WaitOptions;
 import io.appium.java_client.android.AndroidTouchAction;
 import io.appium.java_client.touch.offset.PointOption;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.ElementNotInteractableException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
@@ -18,6 +20,8 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.time.Duration;
+import java.util.List;
+import java.util.NoSuchElementException;
 
 import static java.time.Duration.ofSeconds;
 
@@ -45,18 +49,29 @@ public class Fb_Add_Friends {
             AndroidDriver driver = new AndroidDriver(url, capabilities);
             WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
             System.out.println("Opening Facebook");
-        
- 
-            Thread.sleep(8000);
-            // If method 1 fails, try method 2: Using TouchAction
-            TouchAction touchAction = new TouchAction(driver);
-            touchAction.tap(PointOption.point(270, 168)).perform();
 
-            System.out.println("tap the friend button");
- 
-        
-            // Add a small delay after clicking
-            Thread.sleep(2000);
+            //click friends button (too hard cannot do) 
+            //alternative approach: swipe right
+            // Get screen dimensions
+            Dimension size = driver.manage().window().getSize();
+            int screenWidth = size.getWidth();
+            int screenHeight = size.getHeight();
+
+            // Calculate swipe coordinates
+            int startX = (int) (screenWidth * 0.9); // 10% from left
+            int endX = (int) (screenWidth * 0.1);   // 90% from left
+            int centerY = (int) (screenHeight * 0.8);         // Middle of screen
+
+            // Create TouchAction and perform swipe
+            new TouchAction(driver)
+                .press(PointOption.point(startX, centerY))
+                .waitAction(WaitOptions.waitOptions(Duration.ofMillis(300)))
+                .moveTo(PointOption.point(endX, centerY))
+                .release()
+                .perform();
+
+            // Add wait after swipe
+            Thread.sleep(1000);
 
             int scrollCount = 0;
             int addedFriends = 0;
